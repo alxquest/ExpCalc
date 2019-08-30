@@ -2,102 +2,103 @@
 <head>
 	<script src="jquery-3.4.1.min.js"></script>
 	<script src="angular.min.js"></script>
+	<link rel="stylesheet" type="text/css" href="style.css" media="screen">
 </head>
-<body ng-app="app" ng-controller="ExpCalcController">
+<div ng-app="app" ng-controller="ExpCalcController" class="content">
 
-	<div>
+	<form>
 		<h1>Experience Finder</h1>
 
-		Type: 
+		<p>Type: 
 		<select ng-model="data.finderType">
 			<option>Quest</option>
 			<option>RD</option>
 			<option>IAC</option>
 			<option>Tunnel</option>
 			<option>AK</option>
-		</select><br/><br/>
+		</select></p>
 
-		Character Level: <input type="number"  ng-model="data.finderLevel"/>
+		<p>Character Level: <input type="number"  ng-model="data.finderLevel"/></p>
 
 		<div ng-if="data.finderType === 'Quest'">
-			Select Quest:
+			<p>Select Quest:
 			<select ng-model="data.quest" ng-options="quest as renameQuest(quest) for quest in questlog">
-			</select><br/>
-			<span ng-if="data.quest[6] != 0">Number of completions: <input type="number" ng-model="data.questCompletions"/></span>
+			</select></p>
+			<p ng-if="data.quest[6] != 0">Number of completions: <input type="number" ng-model="data.questCompletions"/></p>
 		</div>
 
 		<div ng-if="data.finderType === 'RD'">
-			RD Number <input type="number" ng-model="data.RDNumber"/><br/>
-			RD Type
+			<p>RD Number <input type="number" ng-model="data.RDNumber"/></p>
+			<p>RD Type
 			<select ng-model="data.RDType">
 				<option>Continuity</option>
 				<option>LOE</option>
 				<option>Security</option>
 				<option>Bribery</option>
 				<option>Bravery</option>
-			</select><br/>
+			</select></p>
 
-			<span ng-if="data.RDType === 'LOE' || data.RDType === 'Security'"><input type="checkbox" ng-model="data.RDHardcore"> Hardcore</span><br/>
-			<span ng-if="data.RDType === 'LOE'">Saves/Deaths: <input type="number"  ng-model="data.RDSavesDeaths" /></span><br/>
+			<p ng-if="data.RDType === 'LOE' || data.RDType === 'Security'"><input type="checkbox" ng-model="data.RDHardcore"> Hardcore</p>
+			<p ng-if="data.RDType === 'LOE'">Saves/Deaths: <input type="number"  ng-model="data.RDSavesDeaths" /></p>
 
 		</div>
 
 		<div ng-if="data.finderType === 'IAC'">
-			Rank: <select ng-model="data.Rank" ng-options="rank as rank[0] for rank in ranks"></select> <br/>
-			Points (complete = 1230) <input ng-model="data.IACPoints" type="number">
+			<p>Rank: <select ng-model="data.Rank" ng-options="rank as rank[0] for rank in ranks"></select></p>
+			<p>Points (complete = 1230) <input ng-model="data.IACPoints" type="number"></p>
 		</div>
 
 		<div ng-if="data.finderType === 'Tunnel'">
-			Tunnel Level: <input ng-model="data.TunnelLevel" type="number" /><br/>
-			Poles: (check all if using pass) <br/>
-			<input type="checkbox" ng-model="data.TunnelPole1"> 1 <br/>
-			<input type="checkbox" ng-model="data.TunnelPole2"> 2 <br/>
-			<input type="checkbox" ng-model="data.TunnelPole3"> 3 <br/>
-			<input type="checkbox" ng-model="data.TunnelPole4"> 4 <br/>
-			<input type="checkbox" ng-model="data.TunnelPole5"> 5 <br/>
+			<p>Tunnel Level: <input ng-model="data.TunnelLevel" type="number" /></p>
+			<p>Poles: (check all if using pass) </p>
+			<p><input type="checkbox" ng-model="data.TunnelPole1"> 1 <br/></p>
+			<p><input type="checkbox" ng-model="data.TunnelPole2"> 2 <br/></p>
+			<p><input type="checkbox" ng-model="data.TunnelPole3"> 3 <br/></p>
+			<p><input type="checkbox" ng-model="data.TunnelPole4"> 4 <br/></p>
+			<p><input type="checkbox" ng-model="data.TunnelPole5"> 5 <br/></p>
 		</div>
 
 		<div ng-if="data.finderType === 'AK'">
-			Current number of AK before hitting next book: <input ng-model="data.currentAK" />
+			<p>Current number of AK before hitting next book: <input ng-model="data.currentAK" /></p>
 		</div>
 
 
-		<button ng-click="calculateFinder()">Calculate</button><br/><br/>
+		<p><input type="submit" ng-click="calculateFinder()" class="submit" value="Calculate"/></p>
 
-		Base Experience: {{data.finderExperience}}<br/>
-		<span ng-if="data.RDType === 'Bribery'">Bribery Cost: {{data.bribeCost}}<br/></span>
-		<button ng-click="sendExpToCalc()">Send Exp to Calculator</button>
+		<p>Base Experience: {{data.finderExperience.toLocaleString()}}<br/></p>
+		<p ng-if="data.RDType === 'Bribery'">Bribery Cost: {{data.bribeCost.toLocaleString()}}</p>
+		<p><input type="submit" ng-click="sendExpToCalc()" class="submit" value="Send Exp to Calculator"/></p>
 
-	</div>
+	</form>
 
  	<hr/>
-	<div>
+	<form>
 		<h1>Experience Calculator</h1>
 
 		<h3>Convert Level to total Experience</h2>
-		Level: <input ng-model="data.convertLevel"><br/>
-		<button ng-click="convertLevelToExp()">Convert</button><br/><br/>
+		<p>Level: <input ng-model="data.convertLevel"></p>
+		<p><input type="submit" ng-click="convertLevelToExp()" class="submit" value="Convert"/></p>
 		<hr/>
 
-		Total Experience: <input type="number" ng-model="data.totalExperience"/> <br/>
-	 	Experience: <input type="number" ng-model="data.experience"/> <br/>
-	 	Boosts <br/>
-	 	<input type="checkbox" ng-model="data.boostDonor" /> Donor<br/>
-	 	<input type="checkbox" ng-model="data.boostExpPot"/> Exp pot<br/>
-	 	Learning level: <input type="number" ng-model="data.boostLearning" /><br/><br/>
+		<p>Total Experience: <input type="number" ng-model="data.totalExperience"/></p>
+	 	<p>Experience: <input type="number" ng-model="data.experience"/></p>
+	 	<p>Boosts</p>
+	 	<p><input type="checkbox" ng-model="data.boostDonor" /> Donor</p>
+	 	<p><input type="checkbox" ng-model="data.boostExpPot"/> Exp pot</p>
+	 	<p>Learning level: <input type="number" ng-model="data.boostLearning" /></p>
 
 
-	 	<button ng-click="calculate()">Calculate</button><br/><br/>
+	 	<p><input type="submit" ng-click="calculate()" class="submit" value="Calculate" /></p>
 
-	 	Input Level: {{data.inputLevel}}<br/>
-	 	Multiplier: {{data.multiplier}}<br/>
-	 	Experience Gained: {{data.calcExperience}}<br/>
-	 	Output Experience: {{data.outputExperience}}<br/>
-	 	Output Level: {{data.outputLevel}}<br/>
-	 	Levels Gained: {{data.levelsGained}}<br/>
+	 	<p>Input Level: {{data.inputLevel}}</p>
+	 	<p>Multiplier: {{data.multiplier}}</p>
+	 	<p>Experience Gained: {{data.calcExperience.toLocaleString()}}</p>
+	 	<p>Output Experience: {{data.outputExperience.toLocaleString()}}</p>
+	 	<p>Output Level: {{data.outputLevel}}</p>
+	 	<p>Levels Gained: {{data.levelsGained}}</p>
 
-	 	<button ng-click="data.totalExperience = data.outputExperience">Set Total Exp to New Exp</button><br/><br/>
-	</div>
+	 	<input type="submit" ng-click="data.totalExperience = data.outputExperience" class="submit" value="Set Total Exp to New Exp"/><br/><br/>
+	</form>
 
 </body>
 
@@ -148,11 +149,14 @@ app.controller('ExpCalcController', function ExpCalcController($scope) {
 		["Mages Gone Berserk",6,9,"Guiwynn","Cameron",800,QLF_REPEATABLE],		//7,
 		["The Recipe for Happiness",7,10,"Guiwynn","Cameron",900,QLF_REPEATABLE],	//8,
 		["Knightly Troubles",7,10,"Logain","Cameron",1200,QLF_REPEATABLE],		//9,
+		["Helping Lucy",6,9,"Lucy","Cameron",750,0],         //79,
+		["A Hunter's Weapons",6,9,"Hunter","Cameron",1250,0],         //80,
+
 		["Loisan's House",9,12,"Seymour","Aston",850,0],				//10,
 		["The Silver Skull",10,13,"Seymour","Aston",1000,0],				//11,
 		["Find Loisan",11,15,"Seymour","Aston",1500,QLF_REPEATABLE],			//12,
 		["Jeepers Creepers",12,18,"Kelly","Aston",1850,QLF_REPEATABLE],			//13,
-		["Underground Park Shrines",15,20,"Kelly","Aston",0,0],				//14, special case: exp awarded in driver, 4500 exp total
+		["Underground Park Shrines",15,20,"Kelly","Aston",4500,0],				//14, special case: exp awarded in driver, 4500 exp total
 		["In Search of Clara",20,27,"Kelly","Aston",2500,0],				//15,
 		["The Astronomer's Notes",15,20,"Gerassimo","Aston",5000,QLF_REPEATABLE],	//16,
 		["The Unwanted Tenants",9,12,"Reskin","Cameron",1250,0],			//17,
@@ -221,8 +225,6 @@ app.controller('ExpCalcController', function ExpCalcController($scope) {
 	    ["The Blue Harpy",58,68,"Hunter","Arkhata",60000,0],                //77,
 	    ["The Mysterious Language",60,65,"Johnatan","Arkhata",100000,0],            //78,
 		
-		["Helping Lucy",6,9,"Lucy","Cameron",750,0],         //79,
-		["A Hunter's Weapons",6,9,"Hunter","Cameron",1250,0],         //80,
 
 	];
 
