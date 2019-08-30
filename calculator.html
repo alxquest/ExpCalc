@@ -13,6 +13,7 @@
 			<option>Quest</option>
 			<option>RD</option>
 			<option>IAC</option>
+			<option>Tunnel</option>
 			<option>AK</option>
 		</select><br/><br/>
 
@@ -44,6 +45,16 @@
 		<div ng-if="data.finderType === 'IAC'">
 			Rank: <select ng-model="data.Rank" ng-options="rank as rank[0] for rank in ranks"></select> <br/>
 			Points (complete = 1230) <input ng-model="data.IACPoints" type="number">
+		</div>
+
+		<div ng-if="data.finderType === 'Tunnel'">
+			Tunnel Level: <input ng-model="data.TunnelLevel" type="number" /><br/>
+			Poles: (check all if using pass) <br/>
+			<input type="checkbox" ng-model="data.TunnelPole1"> 1 <br/>
+			<input type="checkbox" ng-model="data.TunnelPole2"> 2 <br/>
+			<input type="checkbox" ng-model="data.TunnelPole3"> 3 <br/>
+			<input type="checkbox" ng-model="data.TunnelPole4"> 4 <br/>
+			<input type="checkbox" ng-model="data.TunnelPole5"> 5 <br/>
 		</div>
 
 		<div ng-if="data.finderType === 'AK'">
@@ -230,6 +241,12 @@ app.controller('ExpCalcController', function ExpCalcController($scope) {
 		RDNumber : 10,
 		Rank : $scope.ranks[16],
 		IACPoints : 1230,
+		TunnelLevel : 10,
+		TunnelPole1 : true,
+		TunnelPole2 : true,
+		TunnelPole3 : true,
+		TunnelPole4 : true,
+		TunnelPole5 : true,
 
 		// calc
 		totalExperience : 0, 
@@ -330,6 +347,36 @@ app.controller('ExpCalcController', function ExpCalcController($scope) {
 		} else if ($scope.data.finderType === "IAC") {
 
 			$scope.data.finderExperience = Math.floor($scope.data.IACPoints*Math.pow($scope.data.Rank[1]+5, 4)/24);
+
+		} else if ($scope.data.finderType === "Tunnel") {
+
+			val = 0;
+			var level = $scope.data.TunnelLevel;
+			var levelExp = level_value(level);
+
+			if ($scope.data.TunnelPole1) {
+				val+=Math.floor(levelExp/10.0/1)+Math.floor(levelExp/10.0/(1+10));
+				val+=Math.floor(levelExp/10.0/10)+Math.floor(levelExp/10.0/(10+10));
+			}
+
+			if ($scope.data.TunnelPole2) {
+				val+=Math.floor(levelExp/10.0/2)+Math.floor(levelExp/10.0/(2+10));
+				val+=Math.floor(levelExp/10.0/9)+Math.floor(levelExp/10.0/(9+10));
+			}
+			if ($scope.data.TunnelPole3) {
+				val+=Math.floor(levelExp/10.0/3)+Math.floor(levelExp/10.0/(3+10));
+				val+=Math.floor(levelExp/10.0/8)+Math.floor(levelExp/10.0/(8+10));
+			}
+			if ($scope.data.TunnelPole4) {
+				val+=Math.floor(levelExp/10.0/4)+Math.floor(levelExp/10.0/(4+10));
+				val+=Math.floor(levelExp/10.0/7)+Math.floor(levelExp/10.0/(7+10));
+			}
+			if ($scope.data.TunnelPole5) {
+				val+=Math.floor(levelExp/10.0/5)+Math.floor(levelExp/10.0/(5+10));
+				val+=Math.floor(levelExp/10.0/6)+Math.floor(levelExp/10.0/(6+10));
+			}
+
+			$scope.data.finderExperience = val;
 
 		} else if ($scope.data.finderType === "AK") {
 			$scope.data.finderExperience = 250 + ($scope.data.currentAK + 1)*10;
