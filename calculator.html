@@ -1,0 +1,383 @@
+
+<head>
+	<script src="jquery-3.4.1.min.js"></script>
+	<script src="angular.min.js"></script>
+</head>
+<body ng-app="app" ng-controller="ExpCalcController">
+
+	<div>
+		<h1>Experience Finder</h1>
+
+		Type: 
+		<select ng-model="data.finderType">
+			<option>Quest</option>
+			<option>RD</option>
+			<option>IAC</option>
+			<option>AK</option>
+		</select><br/><br/>
+
+		Character Level: <input type="number"  ng-model="data.finderLevel"/>
+
+		<div ng-if="data.finderType === 'Quest'">
+			Select Quest:
+			<select ng-model="data.quest" ng-options="quest as renameQuest(quest) for quest in questlog">
+			</select><br/>
+			<span ng-if="data.quest[6] != 0">Number of completions: <input type="number" ng-model="data.questCompletions"/></span>
+		</div>
+
+		<div ng-if="data.finderType === 'RD'">
+			RD Number <input type="number" ng-model="data.RDNumber"/><br/>
+			RD Type
+			<select ng-model="data.RDType">
+				<option>Continuity</option>
+				<option>LOE</option>
+				<option>Security</option>
+				<option>Bribery</option>
+				<option>Bravery</option>
+			</select><br/>
+
+			<span ng-if="data.RDType === 'LOE' || data.RDType === 'Security'"><input type="checkbox" ng-model="data.RDHardcore"> Hardcore</span><br/>
+			<span ng-if="data.RDType === 'LOE'">Saves/Deaths: <input type="number"  ng-model="data.RDSavesDeaths" /></span><br/>
+
+		</div>
+
+		<div ng-if="data.finderType === 'IAC'">
+			Rank: <select ng-model="data.Rank" ng-options="rank as rank[0] for rank in ranks"></select> <br/>
+			Points (complete = 1230) <input ng-model="data.IACPoints" type="number">
+		</div>
+
+		<div ng-if="data.finderType === 'AK'">
+			Current number of AK before hitting next book: <input ng-model="data.currentAK" />
+		</div>
+
+
+		<button ng-click="calculateFinder()">Calculate</button><br/><br/>
+
+		Base Experience: {{data.finderExperience}}<br/>
+		<span ng-if="data.RDType === 'Bribery'">Bribery Cost: {{data.bribeCost}}<br/></span>
+		<button ng-click="sendExpToCalc()">Send Exp to Calculator</button>
+
+	</div>
+
+ 	<hr/>
+	<div>
+		<h1>Experience Calculator</h1>
+
+		<h3>Convert Level to total Experience</h2>
+		Level: <input ng-model="data.convertLevel"><br/>
+		<button ng-click="convertLevelToExp()">Convert</button><br/><br/>
+		<hr/>
+
+		Total Experience: <input type="number" ng-model="data.totalExperience"/> <br/>
+	 	Experience: <input type="number" ng-model="data.experience"/> <br/>
+	 	Boosts <br/>
+	 	<input type="checkbox" ng-model="data.boostDonor" /> Donor<br/>
+	 	<input type="checkbox" ng-model="data.boostExpPot"/> Exp pot<br/>
+	 	Learning level: <input type="number" ng-model="data.boostLearning" /><br/><br/>
+
+
+	 	<button ng-click="calculate()">Calculate</button><br/><br/>
+
+	 	Input Level: {{data.inputLevel}}<br/>
+	 	Multiplier: {{data.multiplier}}<br/>
+	 	Experience Gained: {{data.calcExperience}}<br/>
+	 	Output Experience: {{data.outputExperience}}<br/>
+	 	Output Level: {{data.outputLevel}}<br/>
+	 	Levels Gained: {{data.levelsGained}}<br/>
+
+	 	<button ng-click="data.totalExperience = data.outputExperience">Set Total Exp to New Exp</button><br/><br/>
+	</div>
+
+</body>
+
+<script>
+
+function level_value(lvl) {
+	return Math.pow(lvl+1, 4) - Math.pow(lvl, 4);
+}
+
+
+var app = angular.module('app', []);
+
+app.controller('ExpCalcController', function ExpCalcController($scope) {
+
+	var QLF_REPEATABLE = 1;
+	var QLF_XREPEAT = 1;
+
+
+	$scope.ranks = [
+		["First Sergeant",      8],	
+		["Sergeant Major",      9],
+		["Second Lieutenant",   10],	
+		["First Lieutenant",    11],
+		["Captain",             12],
+		["Major",               13],
+		["Lieutenant Colonel",  14],
+		["Colonel",             15],
+		["Brigadier General",   16],
+		["Major General",       17],
+		["Lieutenant General",  18],
+		["General",             19],
+		["Field Marshal",       20], 
+		["Knight of Astonia",   21], 
+		["Champion of Astonia",	22],
+		["Hero of Astonia",		23],
+		["Warlord of Astonia",  24] 
+	];
+
+	$scope.questlog = [
+
+		["Lydia's Potion",1,2,"James","Cameron",15,QLF_REPEATABLE],			//0,
+		["Find the Magic Item",2,3,"Gwendylon","Cameron",75,QLF_REPEATABLE],		//1,
+		["The Second Skull",3,5,"Gwendylon","Cameron",150,QLF_REPEATABLE],		//2,
+		["The Third Skull",5,7,"Gwendylon","Cameron",300,QLF_REPEATABLE],		//3,
+		["Kill the Foul Magician",6,8,"Gwendylon","Cameron",800,QLF_REPEATABLE],	//4,
+		["Bear Hunt",6,8,"Yoakin","Cameron",600,QLF_REPEATABLE],			//5,
+		["A Fool's Request",6,8,"Nook","Cameron",400,0],				//6,
+		["Mages Gone Berserk",6,9,"Guiwynn","Cameron",800,QLF_REPEATABLE],		//7,
+		["The Recipe for Happiness",7,10,"Guiwynn","Cameron",900,QLF_REPEATABLE],	//8,
+		["Knightly Troubles",7,10,"Logain","Cameron",1200,QLF_REPEATABLE],		//9,
+		["Loisan's House",9,12,"Seymour","Aston",850,0],				//10,
+		["The Silver Skull",10,13,"Seymour","Aston",1000,0],				//11,
+		["Find Loisan",11,15,"Seymour","Aston",1500,QLF_REPEATABLE],			//12,
+		["Jeepers Creepers",12,18,"Kelly","Aston",1850,QLF_REPEATABLE],			//13,
+		["Underground Park Shrines",15,20,"Kelly","Aston",0,0],				//14, special case: exp awarded in driver, 4500 exp total
+		["In Search of Clara",20,27,"Kelly","Aston",2500,0],				//15,
+		["The Astronomer's Notes",15,20,"Gerassimo","Aston",5000,QLF_REPEATABLE],	//16,
+		["The Unwanted Tenants",9,12,"Reskin","Cameron",1250,0],			//17,
+		["The Toughest Monster",20,25,"Sir Jones","Aston",7500,0],			//18,
+		["The Toughestest Monster",20,26,"Sir Jones","Aston",12000,0],			//19,
+		["Wanted: Occult Staff",30,36,"Carlos","Aston",100000,QLF_REPEATABLE],		//20,
+		["Slay the Swampbeast",23,30,"Clara","Swamp",22500,0],				//21,
+		["Impish Bear Hunt",20,27,"William/Imp","Forest",12500,0],			//22,
+		["Praying Mantis Stew",20,27,"William","Forest",15000,0],			//23,
+		["The Spider Queen",25,30,"Hermit","Forest",25000,0],				//24,
+		["Earning the Lockpick",25,30,"Guildmaster","Exkordon",0,QLF_XREPEAT],		//25, exp awarded in driver, amount depends on robbers killed. range: 5000 to 20000
+		["Extortion",25,30,"Guildmaster","Exkordon",0,QLF_XREPEAT],			//26, exp awarded in driver, 5000 or 10000
+		["Price Fix Exposed",25,30,"Guildmaster","Exkordon",15000,QLF_XREPEAT],		//27,
+		["The Golden Lockpick",26,33,"Guildmaster","Exkordon",15000,QLF_XREPEAT],	//28,
+		["Dirty Hands",26,33,"Sanwyn","Exkordon",0,0],					//29, exp awarded in driver, 45000 total
+		["The Old Governor's Cross",33,40,"Skeleton","Exkordon",30000,QLF_REPEATABLE],	//30,
+		["Spider Poison",30,40,"Cervik","Exkordon",30000,QLF_REPEATABLE],		//31,
+	    ["Join the Tribe",63,80,"Kalanur","Nomad Plains",10000,0],			//32,
+		["Searching Sarkilar",63,80,"Kir Laas","Nomad Plains",450000,0],		//33,
+		["A Golden Statue",72,90,"Kir Garan","Nomad Plains",280000,0],			//34,
+		["Smuggler Book",10,15,"Imp. Commander","Below Aston 2",1000,QLF_REPEATABLE],	//35,
+		["Contraband",10,15,"Imp. Commander","Below Aston 2",0,0],			//36, exp awarded in driver, 5000 total
+		["Smuggler Leader",10,15,"Imp. Commander","Below Aston 2",2000,QLF_REPEATABLE],	//37,
+		["The Family Heirloom",32,40,"Aristocrat","Bran. Forest",40000,QLF_REPEATABLE],	//38,
+		["Bear Hunt - Again",32,36,"Yoatin","Bran. Forest",40000,QLF_REPEATABLE],	//39,
+		["The Jewels of Brannington ",34,40,"Count B.","Brannington",0,QLF_REPEATABLE],	//40, exp awarded in driver, 120k total
+		["A Grolm's Spoils",33,42,"Brenneth","Brannington",15000,QLF_REPEATABLE],	//41,
+		["A Thief's Loot ",33,42,"Brenneth","Brannington",15000,QLF_REPEATABLE],	//42,
+		["A Necromancer's Notes",33,42,"Brenneth","Brannington",15000,QLF_REPEATABLE],	//43,
+		["A Rest Disturbed",36,43,"Spirit","Brannington",60000,QLF_REPEATABLE],		//44,
+		["Searching a Miner's Tool",42,48,"Broklin","Brannington",60000,QLF_REPEATABLE],//45,
+		["A Miner's Vengeance",44,50,"Broklin","Brannington",60000,0],			//46,
+		["A Miner's Misery",85,95,"Dwarven Chief","Grimroot",285000,0],			//47,
+		["A Miner's Bane",95,105,"Dwarven Chief","Grimroot",395000,0],			//48,
+		["A Miner's Anguish",105,115,"Dwarven Chief","Grimroot",525000,0],		//49,
+		["A Miner Lost",115,125,"Dwarven Chief","Grimroot",680000,0],			//50,
+		["Lizard's Teeth",95,105,"Dwarven Shaman","Grimroot",395000,0],			//51,
+		["Collecting Berries",100,110,"Dwarven Shaman","Grimroot",455000,0],		//52,
+		["Elitist Head",105,115,"Dwarven Shaman","Grimroot",525000,0],			//53,
+		
+		["Looking for Caligar",55,65,"Kelly","Aston",80000,0],				//54,
+		["Fighting Styles",55,65,"Glori","Caligar",80000,0],				//55,
+		["Obelisk Hunt",55,65,"Glori","Caligar",80000,0],				//56,
+		["Find the Keyparts",55,65,"Glori","Caligar",80000,0],				//57,
+		["Assemble the Key",55,65,"Glori","Caligar",80000,0],				//58,
+		["Amazon Invaders",55,65,"Homdem","Caligar",80000,0],				//59,
+		["The Emperor's Plaque",55,65,"Kelly","Aston",160000,0],			//60,
+
+		["The Imperial Vault",26,28,"Carlos","Aston",20000,0],				//61,
+		["Tunnel Magics",26,28,"Rouven","Imperial Vault",10000,0],			//62,
+		["Chronicles of Seyan",26,28,"Rouven","Imperial Vault",10000,0],		//63,
+
+	    ["Finding Arkhata",47,55,"Guard","Brannington",60000,0],            //64,
+	    ["Rammy's Crown",48,58,"Rammy","Arkhata",70000,0],                //65,
+	    ["Ishtar's Bracelet",49,59,"Jaz","Arkhata",70000,0],                //66,
+	    ["Queen Fiona's Ring",50,60,"Queen Fiona","Arkhata",85000,0],            //67,
+	    ["A Shopkeeper's Fright",51,61,"Ramin","Arkhata",90000,0],            //68,
+	    ["The Monks' Request",52,62,"Johnatan","Arkhata",60000,0],            //69,
+	    ["The Book Eater",53,63,"Tracy","Arkhata",100000,0],                //70,
+	    ["Entrance Passes",54,64,"Rammy","Arkhata",90000,0],                //71,
+	    ["The Source",60,70,"Jada","Arkhata",175000,0],                    //72,
+	    ["Ceremonial Pot",48,58,"Pot Maker","Arkhata",75000,0],                //73,
+	    ["The Lost Secrets",49,59,"Thai Pan","Arkhata",75000,0],            //74,
+	    ["A Kidnapped Student",53,63,"Trainer","Arkhata",120000,0],            //75,
+	    ["The Traitors",53,63,"Clerk","Arkhata",120000,0],                //76,
+	    ["The Blue Harpy",58,68,"Hunter","Arkhata",60000,0],                //77,
+	    ["The Mysterious Language",60,65,"Johnatan","Arkhata",100000,0],            //78,
+		
+		["Helping Lucy",6,9,"Lucy","Cameron",750,0],         //79,
+		["A Hunter's Weapons",6,9,"Hunter","Cameron",1250,0],         //80,
+
+	];
+
+
+	$scope.data = {
+
+		// finder
+		finderType : "Quest",
+		finderLevel : 1,
+		quest : $scope.questlog[0],
+		questCompletions : 0,
+		finderExperience : 0,
+		bribeCost : 0,
+		currentAK : 0,
+		RDType : "Continuity",
+		RDNumber : 10,
+		Rank : $scope.ranks[16],
+		IACPoints : 1230,
+
+		// calc
+		totalExperience : 0, 
+		experience : 0,
+		multiplier: 1,
+		boostDonor : true,
+		boostExpPot : true,
+		boostLearning : 20
+	}
+
+
+
+
+	$scope.renameQuest = function(quest) {
+
+		return quest[4] + " - " + quest[0] + " (" + quest[3] + ")";
+
+	}
+
+	function questlog_scale(cnt,ex)
+	{
+		switch(cnt) {
+			case 0:		return ex;
+			case 1:		return ex*82/100;
+			case 2:		return ex*68/100;
+			case 3:		return ex*56/100;
+			case 4:		return ex*46/100;
+			case 5:		return ex*38/100;
+			case 6:		return ex*32/100;
+			case 7:		return ex*26/100;
+			case 8:		return ex*21/100;
+			case 9:		return ex*18/100;
+			default:	return ex*15/100;
+		}
+	}
+
+
+	$scope.calculateFinder = function () {
+
+		$scope.data.finderExperience = -1;
+		$scope.data.bribeCost = 0;
+
+		if ($scope.data.finderType === "Quest") {
+			//scaling
+			var val = $scope.data.quest[5];
+			var level = $scope.data.finderLevel;
+
+			if ($scope.data.quest[6] != 0) {
+				val = questlog_scale($scope.data.questCompletions, val);
+			}
+
+
+			if (level>44) val=Math.min(level_value(level)/6,val);
+			else if (level>19) val=Math.min(level_value(level)/4,val);
+			else if (level>4) val=Math.min(level_value(level)/2,val);
+			else val=Math.min(level_value(level),val);
+
+			$scope.data.finderExperience = Math.floor(val);
+
+		} else if ($scope.data.finderType === "RD") {
+
+			var val = -1;
+			var level = Math.min($scope.data.RDNumber, $scope.data.finderLevel+5);
+			var levelExp = level_value(level);
+
+			if ($scope.data.RDType === "Continuity") {
+
+				val = levelExp/6;
+			
+			} else if ($scope.data.RDType === "LOE") {
+
+				if ($scope.data.RDHardcore) {
+					val = levelExp/(3+$scope.data.RDSavesDeaths);
+				} else {
+					if ($scope.data.RDSavesDeaths === 0) {
+						val = 0;
+					} else {
+						val = levelExp/3 + ($scope.data.RDSavesDeaths*levelExp)/30;
+					}
+				}
+
+			} else if ($scope.data.RDType === "Security") {
+
+				val = levelExp/3;
+
+			} else if ($scope.data.RDType === "Bribery") {
+
+				val = levelExp*4/3;
+				$scope.data.bribeCost = Math.min($scope.data.RDNumber*100, val/400);
+
+			} else if ($scope.data.RDType === "Bravery") {
+
+				val = levelExp;
+			} 
+
+			$scope.data.finderExperience = Math.floor(val);
+
+		} else if ($scope.data.finderType === "IAC") {
+
+			$scope.data.finderExperience = Math.floor($scope.data.IACPoints*Math.pow($scope.data.Rank[1]+5, 4)/24);
+
+		} else if ($scope.data.finderType === "AK") {
+			$scope.data.finderExperience = 250 + ($scope.data.currentAK + 1)*10;
+		}
+
+
+	}
+
+	$scope.sendExpToCalc = function() {
+		$scope.data.experience = $scope.data.finderExperience;
+	}
+	
+	$scope.convertLevelToExp = function() {
+		$scope.data.totalExperience = Math.floor(Math.pow($scope.data.convertLevel, 4));
+	}
+
+  	$scope.calculate = function() {
+		
+		$scope.data.inputLevel = Math.pow($scope.data.totalExperience, 0.25);
+
+		var experience = $scope.data.experience;
+
+		$scope.data.multiplier = 1;
+
+		if ($scope.data.boostDonor) $scope.data.multiplier *= 1.25;
+
+		if ($scope.data.boostExpPot) {
+			if ($scope.data.inputLevel < 100) {
+				$scope.data.multiplier *= 1.5;
+			}
+			else {
+				$scope.data.multiplier *= 1.25;
+			}
+		}
+
+		if ($scope.data.boostLearning > 0) $scope.data.multiplier *= (1+ $scope.data.boostLearning*(.015));
+
+		experience *= $scope.data.multiplier;
+
+		$scope.data.calcExperience = Math.floor(experience);
+		$scope.data.outputExperience = Math.floor($scope.data.totalExperience+experience);
+		$scope.data.outputLevel = Math.pow($scope.data.outputExperience, 0.25);
+		$scope.data.levelsGained = $scope.data.outputLevel - $scope.data.inputLevel;
+
+	}
+
+});
+
+
+</script>
+
