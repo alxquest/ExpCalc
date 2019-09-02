@@ -336,7 +336,7 @@ app.controller('ExpCalcController', function ExpCalcController($scope) {
 
 			} else if ($scope.data.RDType === "Bribery") {
 
-				val = levelExp*4/3;
+				val = levelExp*4/12;
 				$scope.data.bribeCost = Math.min($scope.data.RDNumber*100, val/400);
 
 			} else if ($scope.data.RDType === "Bravery") {
