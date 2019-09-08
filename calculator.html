@@ -45,7 +45,7 @@
 
 		<div ng-if="data.finderType === 'IAC'">
 			<p>Rank: <select ng-model="data.Rank" ng-options="rank as rank[0] for rank in ranks"></select></p>
-			<p>Points (complete = 1230) <input ng-model="data.IACPoints" type="number"></p>
+			<p>Points (complete = 910) <input ng-model="data.IACPoints" type="number"></p>
 		</div>
 
 		<div ng-if="data.finderType === 'Tunnel'">
@@ -242,7 +242,7 @@ app.controller('ExpCalcController', function ExpCalcController($scope) {
 		RDType : "Continuity",
 		RDNumber : 10,
 		Rank : $scope.ranks[16],
-		IACPoints : 1230,
+		IACPoints : 910,
 		TunnelLevel : 10,
 		TunnelPole1 : true,
 		TunnelPole2 : true,
